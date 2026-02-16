@@ -1,0 +1,31 @@
+project: relay-smoke
+
+containers:
+  - name: db
+    image: postgres:15-alpine
+    env:
+      POSTGRES_USER: relay
+      POSTGRES_PASSWORD: relay
+      POSTGRES_DB: relay
+
+services:
+  - name: db
+    container: db
+    ports:
+      - name: pg
+        port: 5432
+        proto: tcp
+    volumes:
+      - name: data
+        mount: /var/lib/postgresql/data
+        type: docker_volume
+        provider: local
+
+deploys:
+  - name: dev
+    services:
+      - service: db
+        host: localhost
+        port: 15432
+        target: pg
+        proxy: tcp
