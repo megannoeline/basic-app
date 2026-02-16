@@ -1,6 +1,8 @@
 project: relay-smoke
 
 containers:
+  - name: api
+    dockerfile: app/Dockerfile
   - name: db
     image: postgres:15-alpine
     env:
@@ -9,6 +11,21 @@ containers:
       POSTGRES_DB: relay
 
 services:
+  - name: api
+    container: api
+    ports:
+      - name: http
+        port: 3000
+        proto: tcp
+    env:
+      PORT: "3000"
+      DATABASE_URL: postgres://relay:relay@host.docker.internal:5436/relay
+    health:
+      type: http
+      path: /health
+      timeout: 1
+      interval: 1
+      retries: 30
   - name: db
     container: db
     ports:
@@ -24,8 +41,12 @@ services:
 deploys:
   - name: dev
     services:
+      - service: api
+        host: localhost
+        port: 8080
+        target: http
       - service: db
         host: localhost
-        port: 15432
+        port: 5436
         target: pg
         proxy: tcp
