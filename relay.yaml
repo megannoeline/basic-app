@@ -9,8 +9,6 @@ services:
       - name: http
         port: 3000
         proto: tcp
-    env:
-      ENABLE_CRASH: "true"
     health:
       type: http
       path: /health
@@ -25,17 +23,3 @@ deploys:
         host: basic-app.hostbo.cx
         port: 443
         target: http
-
-  - name: fail-health
-    extend: prod
-    services:
-      - service: web
-        host: basic-app-fail.hostbo.cx
-        port: 443
-        target: http
-        health:
-          type: http
-          path: /__relay_error__
-          timeout: 0.5
-          interval: 0.1
-          retries: 8
