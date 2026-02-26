@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Basic App</title>
+    <style>
+      :root {
+        --bg: #f4f7f3;
+        --card: #ffffff;
+        --border: #d9e1d5;
+        --ink: #1d2b20;
+        --muted: #577063;
+        --ok: #0f8b45;
+        --err: #c2391f;
+        --wait: #a85f00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top left, #eef6df 0%, var(--bg) 55%);
+        color: var(--ink);
+      }
+
+      main {
+        max-width: 760px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 10px 24px rgba(29, 43, 32, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 0.4rem;
+        font-size: 1.6rem;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 0.6rem;
+        margin-top: 1rem;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fdfefe;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: #a7baa9;
+      }
+
+      .result {
+        margin-top: 1rem;
+        padding: 0.9rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #fbfdf8;
+        min-height: 164px;
+      }
+
+      .status {
+        margin: 0 0 0.7rem;
+        font-weight: 700;
+      }
+
+      .status.ok {
+        color: var(--ok);
+      }
+
+      .status.err {
+        color: var(--err);
+      }
+
+      .status.wait {
+        color: var(--wait);
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 0.87rem;
+      }
+
+      .footer {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>Basic App</h1>
+        <p>Use these controls to trigger success, error, and slow responses.</p>
+
+        <div class="controls">
+          <button data-url="/api/success">Success (200)</button>
+          <button data-url="/api/error?code=500">Error (500)</button>
+          <button data-url="/api/error?code=404">Error (404)</button>
+          <button data-url="/api/slow?ms=5000">Slow (5s)</button>
+        </div>
+
+        <div class="result">
+          <p class="status" id="status">Ready</p>
+          <pre id="payload">Click a button to run a test request.</pre>
+        </div>
+
+        <p class="footer">Health check: <code>/health</code></p>
+      </section>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const payloadEl = document.getElementById("payload");
+      const buttons = document.querySelectorAll("button[data-url]");
+
+      function setState(type, statusText, payload) {
+        statusEl.className = "status " + type;
+        statusEl.textContent = statusText;
+        payloadEl.textContent = payload;
+      }
+
+      async function runTest(url) {
+        setState("wait", "Running request...", `GET ${url}`);
+
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          const body = await response.text();
+          const prettyBody = tryFormat(body);
+          const statusText = `HTTP ${response.status} ${response.ok ? "OK" : "ERROR"}`;
+          const type = response.ok ? "ok" : "err";
+          setState(type, statusText, prettyBody);
+        } catch (err) {
+          setState("err", "Request failed", String(err));
+        }
+      }
+
+      function tryFormat(raw) {
+        try {
+          return JSON.stringify(JSON.parse(raw), null, 2);
+        } catch (_) {
+          return raw;
+        }
+      }
+
+      for (const button of buttons) {
+        button.addEventListener("click", () => runTest(button.dataset.url));
+      }
+    </script>
+  </body>
+</html>

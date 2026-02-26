@@ -1,52 +1,41 @@
-project: relay-smoke
-
 containers:
-  - name: api
-    dockerfile: app/Dockerfile
-  - name: db
-    image: postgres:15-alpine
-    env:
-      POSTGRES_USER: relay
-      POSTGRES_PASSWORD: relay
-      POSTGRES_DB: relay
+  - name: app
+    dockerfile: Dockerfile
 
 services:
-  - name: api
-    container: api
+  - name: web
+    container: app
     ports:
       - name: http
         port: 3000
         proto: tcp
     env:
-      PORT: "3000"
-      DATABASE_URL: postgres://relay:relay@host.docker.internal:5436/relay
+      ENABLE_CRASH: "true"
     health:
       type: http
       path: /health
       timeout: 1
-      interval: 1
-      retries: 30
-  - name: db
-    container: db
-    ports:
-      - name: pg
-        port: 5432
-        proto: tcp
-    volumes:
-      - name: data
-        mount: /var/lib/postgresql/data
-        type: docker_volume
-        provider: local
+      interval: 0.2
+      retries: 20
 
 deploys:
-  - name: dev
+  - name: prod
     services:
-      - service: api
-        host: localhost
-        port: 8080
+      - service: web
+        host: basic-app.hostbo.cx
+        port: 443
         target: http
-      - service: db
-        host: localhost
-        port: 5436
-        target: pg
-        proxy: tcp
+
+  - name: fail-health
+    extend: prod
+    services:
+      - service: web
+        host: basic-app-fail.hostbo.cx
+        port: 443
+        target: http
+        health:
+          type: http
+          path: /__relay_error__
+          timeout: 0.5
+          interval: 0.1
+          retries: 8

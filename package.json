@@ -1,0 +1,13 @@
+{
+  "name": "basic-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Very basic app for local deployment and sanity checks.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
