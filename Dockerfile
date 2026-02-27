@@ -10,9 +10,6 @@ RUN npm install --omit=dev --no-audit --no-fund
 
 COPY server.js ./server.js
 
-# INTENTIONAL TEST FAILURE: remove after verifying worker/manager error logging.
-RUN echo "INTENTIONAL_RELAY_ERROR_TEST" && false
-
 COPY public ./public
 
 EXPOSE 3000
